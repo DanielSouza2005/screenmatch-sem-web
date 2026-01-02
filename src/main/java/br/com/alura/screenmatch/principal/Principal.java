@@ -1,22 +1,24 @@
 package br.com.alura.screenmatch.principal;
 
-import br.com.alura.screenmatch.model.DadosEpisodio;
-import br.com.alura.screenmatch.model.DadosEpisodioResumido;
-import br.com.alura.screenmatch.model.DadosSerie;
-import br.com.alura.screenmatch.model.DadosTemporada;
+import br.com.alura.screenmatch.model.*;
 import br.com.alura.screenmatch.service.ConsumoAPI;
 import br.com.alura.screenmatch.service.ConverteDados;
 
+import javax.xml.crypto.Data;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Principal {
 
-    private Scanner input = new Scanner(System.in);
-    private ConsumoAPI consumoAPI = new ConsumoAPI();
-    private ConverteDados conversor = new ConverteDados();
-    private List<DadosTemporada> temporadas = new ArrayList<>();
+    private final Scanner input = new Scanner(System.in);
+    private final ConsumoAPI consumoAPI = new ConsumoAPI();
+    private final ConverteDados conversor = new ConverteDados();
+    private final List<DadosTemporada> temporadas = new ArrayList<>();
 
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String APIKEY = "&apikey=15fd6310";
@@ -39,11 +41,37 @@ public class Principal {
 
         System.out.println(dadosSerie);
         System.out.println(dadosEpisodio);
-        temporadas.forEach(System.out::println);
 
+        System.out.println("Todos os Episódios");
         temporadas.stream()
                 .flatMap(temporada -> temporada.episodios().stream())
                 .map(DadosEpisodioResumido::titulo)
                 .forEach(System.out::println);
+
+        System.out.println("Top 5 melhores episódios");
+        List<Episodio> melhoresEpisodios = temporadas.stream()
+                .flatMap(t -> t.episodios().stream()
+                        .map(d -> new Episodio(t.numeroTemporada(), d))
+                )
+                .sorted(Comparator.comparing(
+                        Episodio::getAvaliacao,
+                        Comparator.reverseOrder()
+                ))
+                .limit(5)
+                .collect(Collectors.toList());
+        System.out.println(melhoresEpisodios);
+
+        System.out.println("A partir de qual ano deseja ver os episódios?");
+        int ano = input.nextInt();
+
+        LocalDate dataFiltro = LocalDate.of(ano, 1, 1).minusDays(1); //ultimo dia do ano anterior
+        List<Episodio> episodiosFiltrados = temporadas.stream()
+                .flatMap(t -> t.episodios().stream()
+                        .map(d -> new Episodio(t.numeroTemporada(), d))
+                )
+                .filter(e -> e.getDataLancamento().isAfter(dataFiltro))
+                .collect(Collectors.toList());
+
+        System.out.println(episodiosFiltrados);
     }
 }
