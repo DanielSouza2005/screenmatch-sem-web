@@ -7,10 +7,7 @@ import br.com.alura.screenmatch.service.ConverteDados;
 import javax.xml.crypto.Data;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Principal {
@@ -43,35 +40,51 @@ public class Principal {
         System.out.println(dadosEpisodio);
 
         System.out.println("Todos os Episódios");
-        temporadas.stream()
-                .flatMap(temporada -> temporada.episodios().stream())
-                .map(DadosEpisodioResumido::titulo)
-                .forEach(System.out::println);
-
-        System.out.println("Top 5 melhores episódios");
-        List<Episodio> melhoresEpisodios = temporadas.stream()
+        List<Episodio> episodios = temporadas.stream()
                 .flatMap(t -> t.episodios().stream()
                         .map(d -> new Episodio(t.numeroTemporada(), d))
                 )
-                .sorted(Comparator.comparing(
-                        Episodio::getAvaliacao,
-                        Comparator.reverseOrder()
-                ))
-                .limit(5)
-                .collect(Collectors.toList());
-        System.out.println(melhoresEpisodios);
-
-        System.out.println("A partir de qual ano deseja ver os episódios?");
-        int ano = input.nextInt();
-
-        LocalDate dataFiltro = LocalDate.of(ano, 1, 1).minusDays(1); //ultimo dia do ano anterior
-        List<Episodio> episodiosFiltrados = temporadas.stream()
-                .flatMap(t -> t.episodios().stream()
-                        .map(d -> new Episodio(t.numeroTemporada(), d))
-                )
-                .filter(e -> e.getDataLancamento().isAfter(dataFiltro))
                 .collect(Collectors.toList());
 
-        System.out.println(episodiosFiltrados);
+        System.out.println(episodios);
+
+        DoubleSummaryStatistics est = episodios.stream()
+                .filter(e -> e.getAvaliacao() > 0)
+                .collect(Collectors.summarizingDouble(Episodio::getAvaliacao));
+        System.out.println("Média: " + est.getAverage());
+        System.out.println("Melhor Nota: " + est.getMax());
+        System.out.println("Pior Nota: " + est.getMin());
+        System.out.println("Quantidade de Episódios: " + est.getCount());
+
+//        System.out.println("Top 5 melhores episódios");
+//        List<Episodio> melhoresEpisodios = episodios.stream()
+//                .sorted(Comparator.comparing(
+//                        Episodio::getAvaliacao,
+//                        Comparator.reverseOrder()
+//                ))
+//                .limit(5)
+//                .collect(Collectors.toList());
+//        System.out.println(melhoresEpisodios);
+
+//        System.out.println("Média de Avaliações por Temporada");
+//        Map<Integer, Double> mediaAvaliacoesPorTemporada =
+//                episodios.stream()
+//                        .filter(e -> e.getAvaliacao() > 0)
+//                        .collect(Collectors.groupingBy(
+//                                Episodio::getTemporada,
+//                                Collectors.averagingDouble(Episodio::getAvaliacao)
+//                        ));
+//
+//        System.out.println(mediaAvaliacoesPorTemporada);
+
+//        System.out.println("A partir de qual ano deseja ver os episódios?");
+//        int ano = input.nextInt();
+//
+//        LocalDate dataFiltro = LocalDate.of(ano, 1, 1).minusDays(1); //ultimo dia do ano anterior
+//        List<Episodio> episodiosFiltrados = episodios.stream()
+//                .filter(e -> e.getDataLancamento().isAfter(dataFiltro))
+//                .collect(Collectors.toList());
+//
+//        System.out.println(episodiosFiltrados);
     }
 }
